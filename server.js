@@ -5,11 +5,13 @@ import { join, extname } from "node:path";
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = join(import.meta.dirname, "public");
+const { version } = JSON.parse(await readFile(join(import.meta.dirname, "package.json"), "utf8"));
 
 // Variáveis comuns: podem ir pro front sem problema
 const publicConfig = () => ({
   appName: process.env.APP_NAME || "Moodboard",
   appEnv: process.env.APP_ENV || "unset",
+  version,
   accentColor: process.env.ACCENT_COLOR || "#ff4d00",
   railway: {
     environment: process.env.RAILWAY_ENVIRONMENT_NAME || null,
