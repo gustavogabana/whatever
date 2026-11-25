@@ -26,6 +26,7 @@
     backdrop-filter: blur(14px);
   }
   .logo { font-weight: 700; letter-spacing: -0.03em; font-size: 19px; display: flex; gap: 8px; align-items: center; }
+  .logo small { font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
   .logo i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
   .search {
     width: min(420px, 50vw); padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line);
@@ -93,13 +94,13 @@
 </head>
 <body>
 <header>
-  <div class="logo"><i></i><span id="brand">Moodboard</span></div>
+  <div class="logo"><i></i><span id="brand">Moodboard</span><small id="ver"></small></div>
   <input class="search" placeholder="Search inspiration…" aria-label="Search">
   <nav><b>Explore</b><span>Saved</span><span>Profile</span></nav>
 </header>
 
 <section class="intro">
-  <h1 id="headline">Visual references,<br>quietly collected.</h1>
+  <h1 id="headline">Deployed from a PR,<br>merged automatically.</h1>
   <p>App de teste pro Railway. Os cards abaixo mostram as variáveis de ambiente lidas pelo servidor — a variável comum aparece por inteiro; o secret nunca sai do backend.</p>
 </section>
 
@@ -139,6 +140,7 @@ function render(cfg) {
   document.documentElement.style.setProperty("--accent", cfg.accentColor);
   document.getElementById("brand").textContent = cfg.appName;
   document.title = cfg.appName;
+  document.getElementById("ver").textContent = "v" + cfg.version;
 
   imageTile(0); imageTile(1);
 
@@ -146,6 +148,7 @@ function render(cfg) {
     <div class="value">${esc(cfg.appName)}</div>
     <div class="rows">
       <div><span>APP_NAME</span><code>${esc(cfg.appName)}</code></div>
+      <div><span>Versão</span><code>v${esc(cfg.version)}</code></div>
       <div><span>APP_ENV</span><code>${esc(cfg.appEnv)}</code></div>
       <div><span>ACCENT_COLOR</span><code>${esc(cfg.accentColor)}</code></div>
       <div><span>Railway env</span><code>${esc(cfg.railway.environment ?? "—")}</code></div>
