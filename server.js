@@ -1,11 +1,28 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual, randomUUID } from "node:crypto";
+import { hostname } from "node:os";
 import { join, extname } from "node:path";
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = join(import.meta.dirname, "public");
 const { version } = JSON.parse(await readFile(join(import.meta.dirname, "package.json"), "utf8"));
+
+// Identidade desta réplica. No Railway, cada replica recebe RAILWAY_REPLICA_ID próprio;
+// localmente (lb.js) usamos REPLICA_ID; fallback: id aleatório por processo.
+const replicaId = process.env.RAILWAY_REPLICA_ID || process.env.REPLICA_ID || randomUUID();
+const startedAt = new Date();
+let hits = 0; // estado em memória: NÃO é compartilhado entre réplicas (de propósito, pra demonstrar)
+const replicaInfo = () => ({
+  id: replicaId,
+  short: replicaId.length > 12 ? replicaId.slice(0, 8) : replicaId,
+  region: process.env.RAILWAY_REPLICA_REGION || null,
+  hostname: hostname(),
+  pid: process.pid,
+  startedAt: startedAt.toISOString(),
+  uptimeSec: Math.round(process.uptime()),
+  hits,
+});
 
 // Variáveis comuns: podem ir pro front sem problema
 const publicConfig = () => ({
@@ -44,11 +61,18 @@ const json = (res, status, body) => {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
+  res.setHeader("x-replica-id", replicaId);
 
   if (url.pathname === "/health") return json(res, 200, { ok: true });
 
   if (url.pathname === "/api/config") {
-    return json(res, 200, { ...publicConfig(), secret: secretStatus() });
+    return json(res, 200, { ...publicConfig(), secret: secretStatus(), replica: replicaInfo() });
+  }
+
+  // Qual réplica atendeu esta request?
+  if (url.pathname === "/api/whoami") {
+    hits++;
+    return json(res, 200, replicaInfo());
   }
 
   // Endpoint protegido: exige Authorization: Bearer <API_SECRET>
@@ -73,7 +97,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`▲ ${publicConfig().appName} on :${PORT} (env=${publicConfig().appEnv}, secret=${secret ? "set" : "missing"})`);
+  console.log(`▲ ${publicConfig().appName} on :${PORT} (env=${publicConfig().appEnv}, secret=${secret ? "set" : "missing"}, replica=${replicaId.slice(0, 8)})`);
 });
 
 process.on("SIGTERM", () => server.close(() => process.exit(0)));

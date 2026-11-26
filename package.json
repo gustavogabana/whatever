@@ -1,11 +1,14 @@
 {
   "name": "railway-env-demo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --env-file=.env --watch server.js"
+    "dev": "node --env-file=.env --watch server.js",
+    "dev:lb": "node lb.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
